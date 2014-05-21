@@ -1757,10 +1757,10 @@ EOTEXT
 
     $reviewers = $message->getFieldValue('reviewerPHIDs');
     if (!$reviewers) {
-      $confirm = 'You have not specified any reviewers. Continue anyway?';
-      if (!phutil_console_confirm($confirm)) {
-        throw new ArcanistUsageException('Specify reviewers and retry.');
-      }
+//      $confirm = 'You have not specified any reviewers. Continue anyway?';
+//      if (!phutil_console_confirm($confirm)) {
+//        throw new ArcanistUsageException('Specify reviewers and retry.');
+//      }
     } else {
       $futures['reviewers'] = $this->getConduit()->callMethod(
         'user.query',
