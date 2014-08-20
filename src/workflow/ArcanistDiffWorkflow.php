@@ -1757,10 +1757,24 @@ EOTEXT
 
     $reviewers = $message->getFieldValue('reviewerPHIDs');
     if (!$reviewers) {
-//      $confirm = 'You have not specified any reviewers. Continue anyway?';
-//      if (!phutil_console_confirm($confirm)) {
-//        throw new ArcanistUsageException('Specify reviewers and retry.');
-//      }
+      $result = $this->getConduit()->callMethodSynchronous('project.query', array('status' => 'status-active'));
+      $projects_data = $result['data'];
+      $projects = array();
+      foreach($projects_data as $proj) {
+        if (empty($proj['members'])) {
+          continue;
+        }
+        $projects []= '#'.$proj['slugs'][0];
+      }
+
+      $confirm = "You have not specified any reviewers.\n".
+                 "You can send to either a person, or to a #project.\n".
+                 'Possible projects: '.implode(', ', $projects)."\n".
+                 'Continue anyway?';
+
+      if (!phutil_console_confirm($confirm)) {
+        throw new ArcanistUsageException('Specify reviewers and retry.');
+      }
     } else {
       $futures['reviewers'] = $this->getConduit()->callMethod(
         'user.query',
