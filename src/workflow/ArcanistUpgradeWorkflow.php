@@ -25,7 +25,11 @@ EOTEXT
   }
 
   public function getArguments() {
-    return array();
+    return array(
+      'force' => array(
+        'help' => 'Forces an upgrade, discarding all local commits.',
+      )
+    );
   }
 
   public function run() {
@@ -64,11 +68,16 @@ EOTEXT
       }
 
       chdir($root);
-      try {
-        phutil_passthru('git pull --rebase');
-      } catch (Exception $ex) {
-        phutil_passthru('git rebase --abort');
-        throw $ex;
+      if ($this->getArgument('force')) {
+        phutil_passthru('git fetch origin master');
+        phutil_passthru('git reset --hard origin/master');
+      } else {
+        try {
+          phutil_passthru('git pull --rebase');
+        } catch (Exception $ex) {
+          phutil_passthru('git rebase --abort');
+          throw $ex;
+        }
       }
     }
 
