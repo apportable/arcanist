@@ -483,6 +483,10 @@ EOTEXT
 
     $this->diffID = $diff_info['diffid'];
 
+    if ($this->getWorkingCopy()->getProjectConfig('push_orphan_refs', false)) {
+      $this->uploadHead();
+    }
+
     $event = $this->dispatchEvent(
       ArcanistEventType::TYPE_DIFF_WASCREATED,
       array(
@@ -2588,4 +2592,17 @@ EOTEXT
     return $this->getArgument('browse');
   }
 
+  private function uploadHead()
+  {
+    $repository_api = $this->getRepositoryAPI();
+    $base = $repository_api->getBaseCommit();
+
+    // check if pushed
+    if ($repository_api->remoteContains($base)) {
+      return;
+    }
+
+    $head = $repository_api->getHeadCommit();
+    $repository_api->pushToRemote($head, sprintf("refs/phabricator/DIFF_%d", $this->diffID), true);
+  }
 }
