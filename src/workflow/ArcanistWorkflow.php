@@ -263,6 +263,14 @@ abstract class ArcanistWorkflow extends Phobject {
     return nonempty($this->forcedConduitVersion, 6);
   }
 
+  final private function getGitTimestamp($directory) {
+    $future = new ExecFuture('git show -s --format=%%ct');
+    $future->setCWD($directory);
+
+    list($stdout, $stderr) = $future->resolvex();
+
+    return (int)trim($stdout);
+  }
 
   /**
    * Override the default timeout for Conduit.
@@ -367,12 +375,14 @@ abstract class ArcanistWorkflow extends Phobject {
       $connection = $this->getConduit()->callMethodSynchronous(
         'conduit.connect',
         array(
-          'client'              => 'arc',
-          'clientVersion'       => $this->getConduitVersion(),
-          'clientDescription'   => php_uname('n').':'.$description,
-          'user'                => $user,
-          'certificate'         => $certificate,
-          'host'                => $this->conduitURI,
+          'client'               => 'arc',
+          'clientVersion'        => $this->getConduitVersion(),
+          'arcanistGitTimestamp' => $this->getGitTimestamp(dirname(phutil_get_library_root('arcanist'))),
+          'phutilGitTimestamp'   => $this->getGitTimestamp(dirname(phutil_get_library_root('phutil'))),
+          'clientDescription'    => php_uname('n').':'.$description,
+          'user'                 => $user,
+          'certificate'          => $certificate,
+          'host'                 => $this->conduitURI,
         ));
     } catch (ConduitClientException $ex) {
       if ($ex->getErrorCode() == 'ERR-NO-CERTIFICATE' ||
@@ -410,7 +420,7 @@ abstract class ArcanistWorkflow extends Phobject {
         $root = dirname(phutil_get_library_root('arcanist'));
 
         chdir($root);
-        $err = phutil_passthru('%s upgrade', $root.'/bin/arc');
+        $err = phutil_passthru('%s upgrade --force', $root.'/bin/arc');
         if (!$err) {
           echo "\nTry running your arc command again.\n";
         }
