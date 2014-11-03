@@ -1216,4 +1216,18 @@ final class ArcanistGitAPI extends ArcanistRepositoryAPI {
     $this->resolvedHeadCommit = null;
   }
 
+  public function remoteContains($commit) {
+    list($stdout) = $this->execxLocal(
+      "branch -r --contains %s",
+       $commit);
+
+    $stdout = trim($stdout);
+    return empty($stdout) === false;
+  }
+
+  public function pushToRemote($commit, $remote, $force = false) {
+      $this->execxLocal($force ?
+        "push origin %s:%s --force" : "git push origin %s:%s",
+        $commit, $remote);
+  }
 }
